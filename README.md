@@ -1,2 +1,4 @@
 # tkm32f499
-demo tkm32f499 project with arm-gcc and CMake
+Demo project with arm-gcc and CMake.
+Based on tkm32f499 chip and TK043F1168 board. 
+
