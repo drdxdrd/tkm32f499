@@ -1,25 +1,27 @@
+
+#include "board/led.h"
 #include "hal/hal_gpio.h"
 #include "hal/hal_rcc.h"
+#include "system/sys.h"
+#include "timer/system_timer.h"
+
+static uint16_t cnt = 0;
+static void SysTimerHandler() {
+  if (250 == cnt) {
+    LedSwitch();
+    cnt = 0;
+  } else {
+    cnt++;
+  }
+}
 
 int main(void) {
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-
-  // Configure the GPIO connected to the LED as push-pull output mode
-  GPIO_InitTypeDef gpio;
-  gpio.GPIO_Pin = GPIO_Pin_8;
-  gpio.GPIO_Speed = GPIO_Speed_50MHz;
-  gpio.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_Init(GPIOA, &gpio);
-
+  RemapVtorTable();
+  SystemClk_HSEInit(RCC_PLLMul_20);  // Start PLL clock, 12MHz*20=240MHz
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+  LedInit();
+  SystemTimerInit(SysTimerHandler);
   while (true) {
-    GPIO_SetBits(GPIOA, GPIO_Pin_8);
-    for (uint32_t i = 0; i < 2000000; i++) {
-      ;
-    }
-
-    GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-    for (uint32_t i = 0; i < 2000000; i++) {
-      ;
-    }
+    ;
   }
 }

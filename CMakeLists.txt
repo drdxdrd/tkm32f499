@@ -24,11 +24,7 @@ include_directories(${PRJ_DIR}/src/hal)
 
 file (GLOB_RECURSE H_FILES ${SRC_DIR}/*.h)
 file (GLOB_RECURSE CPP_FILES ${SRC_DIR}/*.cc)
-#file (GLOB_RECURSE C_FILES ${SRC_DIR}/*.c)
-set(C_FILES
-   ${SRC_DIR}/hal/hal_gpio.c
-   ${SRC_DIR}/hal/hal_rcc.c
-)
+file (GLOB_RECURSE C_FILES ${SRC_DIR}/*.c)
 
 
 # Create bin directory
