@@ -4,7 +4,13 @@ namespace timer {
 
 SoftTimer::SoftTimer(const ValueType &timeout) : val_timeout_(timeout) {}
 
-void SoftTimer::SetTimeout(const ValueType &timeout) { val_timeout_ = timeout; }
+bool SoftTimer::SetTimeout(const ValueType &timeout) {
+  const bool is_not_act = !IsActivate();
+  if (is_not_act) {
+    val_timeout_ = timeout;
+  }
+  return is_not_act;
+}
 
 void SoftTimer::Start(const ValueType &timeout) {
   val_timeout_ = timeout;
@@ -42,19 +48,13 @@ bool SoftTimer::IsTimeout() {
   if (flag_stop_) {
     return true;
   }
-
   if (!flag_start_) {
     return false;
   }
   return UpdateFlags();
 }
 
-bool SoftTimer::IsActivate() {
-  if (flag_start_) {
-    UpdateFlags();
-  }
-  return flag_start_;
-}
+bool SoftTimer::IsActivate() const { return flag_start_; }
 
 SoftTimer::ValueType SoftTimer::GetTimeoutValue() const { return val_timeout_; }
 

@@ -8,12 +8,25 @@ class SoftTimer {
  public:
   using ValueType = uint32_t;
   explicit SoftTimer(const ValueType &timeout = 0);
-  void SetTimeout(const ValueType &timeout);
+  ///
+  /// \brief SetTimeout function set timer timeout if it is not activated
+  /// \param timeout
+  /// \returns true if timeout is set otherwise returns false
+  ///
+  bool SetTimeout(const ValueType &timeout);
   void Start(const ValueType &timeout);
   void Start();
-  void Reset();
+  ///
+  /// \brief Stop function stop and reset timer
+  ///
+  void Stop();
   bool IsTimeout();
-  bool IsActivate();
+  ///
+  /// \brief IsActivate
+  /// \return true if timer is activate. Timer is activate all time from call
+  /// Start to call IsTimeout or Stop.
+  ///
+  bool IsActivate() const;
   ValueType GetTimeoutValue() const;
 
  private:

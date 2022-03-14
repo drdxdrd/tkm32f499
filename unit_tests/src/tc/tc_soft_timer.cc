@@ -21,7 +21,7 @@ TEST(SoftTimer, Init) {
   EXPECT_EQ(t, timer2.GetTimeoutValue());
 }
 
-TEST(SoftTimer, Reset) {
+TEST(SoftTimer, Stop) {
   const Timer::ValueType t = 42;
   Timer timer(t);
   EXPECT_EQ(t, timer.GetTimeoutValue());
@@ -43,12 +43,33 @@ TEST(SoftTimer, Reset) {
 
 TEST(SoftTimer, SetTimeout) {
   const Timer::ValueType t = 42;
+  const Timer::ValueType t1 = 55;
+  const Timer::ValueType t2 = 77;
   Timer timer(t);
+  timer.clk_ = 10;
   EXPECT_EQ(t, timer.GetTimeoutValue());
-  timer.SetTimeout(55);
-  EXPECT_EQ(static_cast<Timer::ValueType>(55), timer.GetTimeoutValue());
+  EXPECT_TRUE(timer.SetTimeout(55));
+  EXPECT_EQ(t1, timer.GetTimeoutValue());
   timer.Reset();
-  EXPECT_EQ(static_cast<Timer::ValueType>(55), timer.GetTimeoutValue());
+  EXPECT_EQ(t1, timer.GetTimeoutValue());
+
+  timer.Start();
+  EXPECT_EQ(t1, timer.GetTimeoutValue());
+  EXPECT_FALSE(timer.SetTimeout(t2));
+  timer.clk_++;
+  EXPECT_EQ(t1, timer.GetTimeoutValue());
+  EXPECT_FALSE(timer.SetTimeout(t2));
+
+  timer.clk_ += t1;
+
+  EXPECT_EQ(t1, timer.GetTimeoutValue());
+  EXPECT_FALSE(timer.SetTimeout(t2));
+  EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_EQ(t1, timer.GetTimeoutValue());
+  EXPECT_TRUE(timer.SetTimeout(t2));
+  EXPECT_EQ(t2, timer.GetTimeoutValue());
+  timer.Reset();
+  EXPECT_EQ(t2, timer.GetTimeoutValue());
 }
 
 TEST(SoftTimer, StartReset) {
@@ -65,6 +86,7 @@ TEST(SoftTimer, StartReset) {
   EXPECT_EQ(t, timer.GetTimeoutValue());
   EXPECT_FALSE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 }
 
 TEST(SoftTimer, Timeout) {
@@ -72,21 +94,32 @@ TEST(SoftTimer, Timeout) {
   Timer timer(t);
   timer.clk_ = 10;
   timer.Start();
+  EXPECT_TRUE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_TRUE(timer.IsActivate());
   timer.clk_ += (t - 1);
+  EXPECT_TRUE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_TRUE(timer.IsActivate());
 
   // Timeout
   timer.clk_++;
+  EXPECT_TRUE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 
   timer.clk_++;
+  EXPECT_FALSE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 
   timer.clk_ += std::numeric_limits<Timer::ValueType>::max();
+  EXPECT_FALSE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 
   timer.clk_++;
+  EXPECT_FALSE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
   EXPECT_FALSE(timer.IsActivate());
 
@@ -94,6 +127,7 @@ TEST(SoftTimer, Timeout) {
   EXPECT_EQ(t, timer.GetTimeoutValue());
   EXPECT_FALSE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 }
 
 TEST(SoftTimer, Activate) {
@@ -108,22 +142,24 @@ TEST(SoftTimer, Activate) {
 
   // Timeout
   timer.clk_++;
-  EXPECT_FALSE(timer.IsActivate());
+  EXPECT_TRUE(timer.IsActivate());
 
   timer.clk_++;
-  EXPECT_FALSE(timer.IsActivate());
+  EXPECT_TRUE(timer.IsActivate());
 
   timer.clk_ += std::numeric_limits<Timer::ValueType>::max();
-  EXPECT_FALSE(timer.IsActivate());
+  EXPECT_TRUE(timer.IsActivate());
 
   timer.clk_++;
-  EXPECT_FALSE(timer.IsActivate());
+  EXPECT_TRUE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 
   timer.Reset();
   EXPECT_EQ(t, timer.GetTimeoutValue());
   EXPECT_FALSE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 }
 
 TEST(SoftTimer, PreOverflow) {
@@ -133,12 +169,14 @@ TEST(SoftTimer, PreOverflow) {
   timer.Start();
   EXPECT_TRUE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_TRUE(timer.IsActivate());
 
   // max timer timeout
   timer.clk_ += std::numeric_limits<Timer::ValueType>::max();
 
-  EXPECT_FALSE(timer.IsActivate());
+  EXPECT_TRUE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 
   timer.Reset();
   EXPECT_EQ(t, timer.GetTimeoutValue());
@@ -153,16 +191,19 @@ TEST(SoftTimer, Overflow) {
   timer.Start();
   EXPECT_TRUE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_TRUE(timer.IsActivate());
 
   // max timer timeout + 1
   timer.clk_++;
   timer.clk_ += std::numeric_limits<Timer::ValueType>::max();
   EXPECT_TRUE(timer.IsActivate());
   EXPECT_FALSE(timer.IsTimeout());
+  EXPECT_TRUE(timer.IsActivate());
 
   timer.clk_ += t;
-  EXPECT_FALSE(timer.IsActivate());
+  EXPECT_TRUE(timer.IsActivate());
   EXPECT_TRUE(timer.IsTimeout());
+  EXPECT_FALSE(timer.IsActivate());
 
   timer.Reset();
   EXPECT_EQ(t, timer.GetTimeoutValue());
